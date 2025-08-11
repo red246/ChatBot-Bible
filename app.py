@@ -7,10 +7,14 @@ from transformers import pipeline
 # Load data
 @st.cache_resource
 def load_data():
-    with open("chunks.pkl", "rb") as f:
-        chunks = pickle.load(f)
-    index = faiss.read_index("faiss.index")
-    return chunks, index
+    try:
+        with open("chunks.pkl", "rb") as f:
+            chunks = pickle.load(f)
+        index = faiss.read_index("faiss.index")
+        return chunks, index
+    except Exception as e:
+        st.error(f"Error loading data files: {e}")
+        st.stop()
 
 chunks, index = load_data()
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
