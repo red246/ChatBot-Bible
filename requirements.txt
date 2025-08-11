@@ -1,6 +1,6 @@
 streamlit
 sentence-transformers
-faiss-cpu
 transformers
-accelerate
+faiss-cpu
 PyMuPDF
+torch
