@@ -20,7 +20,7 @@ chunks, index = load_data()
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Load free model from Hugging Face
-qa_model = pipeline("text-generation", model="mistralai/Mistral-7B-Instruct-v0.2", device_map="auto")
+qa_model = pipeline("text-generation", model="tiiuae/falcon-rw-1b", device="cpu")
 
 st.title("📄 Ask My PDF")
 st.write("Ask questions about a specific PDF document")
