@@ -17,9 +17,9 @@ def load_data():
 def load_models():
     embed_model = SentenceTransformer("all-MiniLM-L6-v2")
     qa_model = pipeline(
-        "text-generation",
-        model="tiiuae/falcon-rw-1b",
-        device=-1  # Run on CPU
+        "text2text-generation",
+        model="google/flan-t5-base",
+        device=-1  # CPU only
     )
     return embed_model, qa_model
 
@@ -28,8 +28,8 @@ chunks, index = load_data()
 embed_model, qa_model = load_models()
 
 # UI
-st.title("📘 Ask My PDF")
-st.write("Ask questions based on the uploaded PDF content.")
+st.title("📘 Ask My PDF (Fast Version)")
+st.write("Ask questions based on the PDF I preloaded.")
 
 # User input
 question = st.text_input("Enter your question:")
@@ -44,17 +44,17 @@ if question:
     # Build context from those chunks
     context = ". ".join([chunks[i] for i in I[0]])
 
-    # Truncate context to avoid exceeding model's input limit
-    context = context[:1200]  # ~1200 characters is safe for 1024-token models
+    # Truncate context to ~800 characters for speed
+    context = context[:800]
 
-    # Build the prompt
-    prompt = f"Context: {context}\n\nQuestion: {question}\nAnswer:"
+    # Build a Flan-style prompt
+    prompt = f"Answer the question based only on this context:\n\n{context}\n\nQuestion: {question}"
 
     # Generate answer
     with st.spinner("Thinking..."):
-        output = qa_model(prompt, max_new_tokens=200, do_sample=True, temperature=0.7)
-        answer = output[0]["generated_text"].split("Answer:")[-1].strip()
+        result = qa_model(prompt, max_new_tokens=80)[0]["generated_text"]
 
     # Show answer
     st.markdown("### 📎 Answer:")
-    st.write(answer)
+    st.write(result.strip())
+
