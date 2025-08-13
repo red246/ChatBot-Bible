@@ -4,4 +4,4 @@ transformers
 faiss-cpu
 PyMuPDF
 torch
-openai
+openai === 0.28
