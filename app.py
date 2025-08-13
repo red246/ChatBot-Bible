@@ -1,10 +1,19 @@
 import streamlit as st
 import faiss
 import pickle
+import hashlib
+import openai
 from sentence_transformers import SentenceTransformer
-from transformers import pipeline
 
-# Load preprocessed chunks and FAISS index
+# In-memory cache (reset each session)
+answer_cache = {}
+
+# OpenRouter API Setup
+openai.api_key = st.secrets["openrouter"]["api_key"]
+openai.api_base = "https://openrouter.ai/api/v1"
+model_name = "microsoft/phi-3-mini-128k-instruct"
+
+# Load data
 @st.cache_resource
 def load_data():
     with open("chunks.pkl", "rb") as f:
@@ -12,49 +21,64 @@ def load_data():
     index = faiss.read_index("faiss.index")
     return chunks, index
 
-# Load models
+# Load embedding model
 @st.cache_resource
-def load_models():
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-    qa_model = pipeline(
-        "text2text-generation",
-        model="google/flan-t5-base",
-        device=-1  # CPU only
-    )
-    return embed_model, qa_model
+def load_embedder():
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
-# Load everything
 chunks, index = load_data()
-embed_model, qa_model = load_models()
+embed_model = load_embedder()
 
 # UI
-st.title("📘 Ask My PDF (Fast Version)")
-st.write("Ask questions based on the PDF I preloaded.")
+st.title("📘 Ask My PDF (Powered by OpenRouter)")
+st.markdown("Ask questions based on a preloaded PDF document.")
 
-# User input
 question = st.text_input("Enter your question:")
 
+# Hashing for cache key
+def get_cache_key(question: str):
+    clean = question.strip().lower()  # Normalize: remove extra spaces, lowercase
+    return hashlib.md5(clean.encode("utf-8")).hexdigest()
+
 if question:
-    # Embed the question
-    query_vec = embed_model.encode([question])
+    key = get_cache_key(question)
 
-    # Search for top 2 relevant chunks
-    _, I = index.search(query_vec, k=2)
+    if key in answer_cache:
+        result = answer_cache[key]
+        st.info("✅ Loaded from cache.")
+    else:
+        # Embed & search
+        query_vec = embed_model.encode([question])
+        _, I = index.search(query_vec, k=2)
+        context = ". ".join([chunks[i] for i in I[0]])
+        context = context[:1000]
 
-    # Build context from those chunks
-    context = ". ".join([chunks[i] for i in I[0]])
+        # Prompt
+        prompt = f"""Answer the question using only the context below.
 
-    # Truncate context to ~800 characters for speed
-    context = context[:800]
+Context:
+{context}
 
-    # Build a Flan-style prompt
-    prompt = f"Answer the question based only on this context:\n\n{context}\n\nQuestion: {question}"
+Question: {question}
+"""
 
-    # Generate answer
-    with st.spinner("Thinking..."):
-        result = qa_model(prompt, max_new_tokens=80)[0]["generated_text"]
+        # Call OpenRouter
+        with st.spinner("Thinking..."):
+            try:
+                response = openai.ChatCompletion.create(
+                    model=model_name,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    max_tokens=200,
+                    temperature=0.2,
+                )
+                result = response.choices[0].message.content.strip()
+                answer_cache[key] = result
+            except Exception as e:
+                result = f"⚠️ Error: {str(e)}"
 
     # Show answer
     st.markdown("### 📎 Answer:")
-    st.write(result.strip())
-
+    st.write(result)
