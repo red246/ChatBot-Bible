@@ -5,7 +5,6 @@ import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
 
-theme = st.radio("🌗 Choose Theme", ["Light", "Dark"], horizontal=True)
 
 # In-memory cache (reset each session)
 answer_cache = {}
@@ -84,79 +83,5 @@ Question: {question}
     # Show answer
     st.markdown("### 📎 Answer:")
     st.write(result)
-def set_theme_css(mode):
-    if mode == "Light":
-        css = """
-        body {
-            background-color: #f9f9f9;
-            color: #222;
-        }
-        .stMarkdown {
-            background-color: #ffffff;
-            border-left: 4px solid #3498db;
-            padding: 1rem;
-            border-radius: 8px;
-        }
-        h1 {
-            color: #1f77b4;
-        }
-        input {
-            background-color: #fff;
-            color: #000;
-        }
-        """
-    else:  # Dark mode
-        css = """
-        body {
-            background-color: #121212;
-            color: #eee;
-        }
-        .stMarkdown {
-            background-color: #1e1e1e;
-            border-left: 4px solid #6ab0f3;
-            padding: 1rem;
-            border-radius: 8px;
-            color: #eee;
-        }
-        h1 {
-            color: #6ab0f3;
-        }
-        input {
-            background-color: #2c2c2c;
-            color: #fff;
-        }
-        """
-    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
     
-set_theme_css(theme)
-
-
-local_css("""
-body {
-    background-color: #fefefe;
-    background-image: linear-gradient(to right, #f0f2f5, #ffffff);
-}
-
-    /* Make title stand out */
-    h1 {
-        font-size: 2.5emcolor: #2c3e50;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    /* Add padding to input box */
-    .stTextInput>div>div>input {
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-    }
-
-    /* Answer output styling */
-    .stMarkdown {
-        font-size: 1.1em;
-        border-left: 5px solid #3498db;
-        padding: 1rem;
-        border-radius: 5px;
-    }
-""")
 
