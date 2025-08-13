@@ -7,8 +7,6 @@ from sentence_transformers import SentenceTransformer
 
 theme = st.radio("🌗 Choose Theme", ["Light", "Dark"], horizontal=True)
 
-set_theme_css(theme)
-
 def set_theme_css(mode):
     if mode == "Light":
         css = """
@@ -53,6 +51,7 @@ def set_theme_css(mode):
         """
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
+set_theme_css(theme)
 
 # In-memory cache (reset each session)
 answer_cache = {}
