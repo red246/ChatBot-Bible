@@ -4,3 +4,4 @@ transformers
 faiss-cpu
 PyMuPDF
 torch
+openai
