@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 answer_cache = {}
 
 # OpenRouter API Setup
-openai.api_key = st.secrets["openrouter"]["api_key"]
+openai.api_key = st.secrets["openrouter"]["chatbotkey"]
 openai.api_base = "https://openrouter.ai/api/v1"
 model_name = "microsoft/phi-3-mini-128k-instruct"
 
