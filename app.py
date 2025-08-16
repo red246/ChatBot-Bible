@@ -5,6 +5,109 @@ import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
 
+background_url = f'url("data:image/png;base64,{get_base64_of_bin_file("your_image.png")}")'
+
+st.markdown("""
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<style>
+body {{
+    background-image: {background_url};
+    background-color: #5E095E; /* Fallback color */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #FFFFFF;
+    margin: 0;
+    padding: 0;
+}}
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    z-index: 1000;
+    text-decoration: none;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+/* ---------- Center All Headers ---------- */
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ---------- Input Styling (Accessible) ---------- */
+.st-key-styledinput input {
+    border: 2px solid #CBC3E3; /* Light lavender */
+    border-radius: 5px;
+    background-color: #FFFFFF;
+    color: #000000;
+    padding: 10px;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Hover and focus states with accessible outline and contrast */
+.st-key-styledinput input:hover {
+    border: 2px solid #f02035;
+    box-shadow: 0 0 8px #f02092;
+}
+
+.st-key-styledinput input:focus {
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 10px #FFD700;
+    outline: 3px solid #FFD700; /* Ensure visible keyboard focus */
+}
+
+/* ---------- Skip Link (Optional Accessibility Feature) ---------- */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    z-index: 1000;
+    text-decoration: none;
+}
+.skip-link:focus {
+    top: 0;
+}
+
+/* ---------- Dark Mode Support ---------- */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121212;
+        color: #FFFFFF;
+    }
+
+    .st-key-styledinput input {
+        background-color: #1E1E1E;
+        color: #FFFFFF;
+        border: 2px solid #888;
+    }
+
+    .st-key-styledinput input:focus {
+        border: 2px solid #FFD700;
+        box-shadow: 0 0 10px #FFD700;
+        outline: 3px solid #FFD700;
+    }
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # In-memory cache (reset each session)
 answer_cache = {}
@@ -31,10 +134,15 @@ chunks, index = load_data()
 embed_model = load_embedder()
 
 # UI
-st.title("Just Ask The Bible")
-st.markdown("Ask questions about the Bible and life according to the Bible")
+st.markdown("# Ask My PDF")  # H2 — Section title
+st.markdown("## Enter your question below")  # H3 — Instruction
 
-question = st.text_input("Enter your question:")
+
+question = st.text_input(
+    "Your question",
+    key="styledinput",
+    help="Type a question about the uploaded PDF document. Press Enter to submit."
+)
 
 # Hashing for cache key
 def get_cache_key(question: str):
@@ -53,9 +161,11 @@ if question:
         _, I = index.search(query_vec, k=2)
         context = ". ".join([chunks[i] for i in I[0]])
         context = context[:1000]
-
+        
         # Prompt
         prompt = f"""Answer the question using only the context below.
+        
+st.markdown("### This bible reading is from the American Standard version ")  # H3 — Instruction
 
 Context:
 {context}
@@ -81,7 +191,13 @@ Question: {question}
                 result = f"⚠️ Error: {str(e)}"
 
     # Show answer
-    st.markdown("### 📎 Answer:")
+    st.markdown("""
+    <div id="main-content" role="main" aria-label="Answer Section">
+      <h4>Answer</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("#### Answer:")
     st.write(result)
     
 
