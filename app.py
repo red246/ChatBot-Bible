@@ -9,7 +9,7 @@ st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <style>
 body {{
-    background-image: url('https://cdn12.picryl.com/photo/2016/12/31/bible-book-holy-scripture-religion-6e74a9-1024.jpg');
+    background-image: url("https://imgur.com/a/zPZvayH");
     background-color: #5E095E; /* Fallback color */
     background-size: cover;
     background-repeat: no-repeat;
@@ -24,17 +24,27 @@ body {{
 
 .skip-link {
     position: absolute;
-    top: -40px;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+.skip-link:focus {
     left: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+    clip: auto;
+    padding: 8px 16px;
     background: #000;
     color: #fff;
-    padding: 8px 16px;
     z-index: 1000;
-    text-decoration: none;
 }
-.skip-link:focus {
-    top: 0;
-}
+
 
 /* ---------- Center All Headers ---------- */
 h1, h2, h3, h4, h5, h6 {
