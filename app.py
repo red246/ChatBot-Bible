@@ -121,7 +121,7 @@ h1, h2, h3, h4, h5, h6 {
 answer_cache = {}
 
 # OpenRouter API Setup
-openai.api_key = st.secrets["openrouter"]["chatbotkey"]
+#openai.api_key = st.secrets["openrouter"]["chatbotkey"]
 openai.api_base = "https://openrouter.ai/api/v1"
 model_name = "microsoft/phi-3-mini-128k-instruct"
 
@@ -134,8 +134,8 @@ def load_data():
     return chunks, index
 
 # Load embedding model
-@st.cache_resource
-def load_embedder():
+#@st.cache_resource
+#def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
 chunks, index = load_data()
