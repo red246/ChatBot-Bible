@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <style>
-body {{
+st.app {{
     background-image: url("https://itoldya420.getarchive.net/amp/media/bible-book-holy-scripture-religion-6e74a9");
     background-size: cover;
     background-repeat: no-repeat;
