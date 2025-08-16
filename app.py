@@ -5,13 +5,14 @@ import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
 
-image_base64 = get_base64_of_bin_file("download.jpg")
-background_url = f'url("data:image/png;base64,{image_base64}")'
-
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
+
+image_base64 = get_base64_of_bin_file("download.jpg")
+background_url = f'url("data:image/png;base64,{image_base64}")'
+
 
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
