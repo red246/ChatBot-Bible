@@ -5,7 +5,8 @@ import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
 
-background_url = f'url("data:image/png;base64,{get_base64_of_bin_file("download.jpg")}")'
+image_base64 = get_base64_of_bin_file("download.jpg")
+background_url = f'url("data:image/png;base64,{image_base64}")'
 
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
