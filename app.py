@@ -2,6 +2,7 @@ import streamlit as st
 import faiss
 import pickle
 import hashlib
+import base64
 import openai
 from sentence_transformers import SentenceTransformer
 
