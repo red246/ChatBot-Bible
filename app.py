@@ -2,24 +2,14 @@ import streamlit as st
 import faiss
 import pickle
 import hashlib
-import base64
 import openai
 from sentence_transformers import SentenceTransformer
-
-def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
-image_base64 = get_base64_of_bin_file("download.jpg")
-background_url = f'url("data:image/png;base64,{image_base64}")'
-
 
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <style>
 body {{
-    background-image: {/ChatBot-Bible/download.jpg};
+    background-image: url('https://cdn12.picryl.com/photo/2016/12/31/bible-book-holy-scripture-religion-6e74a9-1024.jpg');
     background-color: #5E095E; /* Fallback color */
     background-size: cover;
     background-repeat: no-repeat;
@@ -144,7 +134,7 @@ embed_model = load_embedder()
 # UI
 st.markdown("# Ask My PDF")  # H2 — Section title
 st.markdown("## Enter your question below")  # H3 — Instruction
-
+st.markdown("### This bible reading is from the American Standard version ")  # H3 — Instruction
 
 question = st.text_input(
     "Your question",
@@ -173,8 +163,6 @@ if question:
         # Prompt
         prompt = f"""Answer the question using only the context below.
         
-st.markdown("### This bible reading is from the American Standard version ")  # H3 — Instruction
-
 Context:
 {context}
 
@@ -201,11 +189,9 @@ Question: {question}
     # Show answer
     st.markdown("""
     <div id="main-content" role="main" aria-label="Answer Section">
-      <h4>Answer</h2>
+      <h4>Answer:</h4>
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("#### Answer:")
     st.write(result)
     
 
