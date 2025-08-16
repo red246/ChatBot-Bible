@@ -141,9 +141,9 @@ chunks, index = load_data()
 embed_model = load_embedder()
 
 # UI
-st.markdown("# Ask My PDF")  # H2 — Section title
+st.markdown("# Ask The Bible")  # H2 — Section title
 st.markdown("## Enter your question below")  # H3 — Instruction
-st.markdown("### This bible reading is from the American Standard version ")  # H3 — Instruction
+st.markdown("### This bible reading is from the American Standard Bible ")  # H3 — Instruction
 
 question = st.text_input(
     "Your question",
