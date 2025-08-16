@@ -5,3 +5,4 @@ faiss-cpu
 PyMuPDF
 torch
 openai === 0.28
+base64
