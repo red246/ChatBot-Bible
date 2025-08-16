@@ -5,13 +5,13 @@ import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
 
-background_url = f'url("data:image/png;base64,{get_base64_of_bin_file("your_image.png")}")'
+background_url = f'url("data:image/png;base64,{get_base64_of_bin_file("download.jpg")}")'
 
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
 <style>
 body {{
-    background-image: {background_url};
+    background-image: {/ChatBot-Bible/download.jpg};
     background-color: #5E095E; /* Fallback color */
     background-size: cover;
     background-repeat: no-repeat;
