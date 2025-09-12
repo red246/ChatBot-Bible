@@ -4,6 +4,7 @@ import pickle
 import hashlib
 import openai
 from sentence_transformers import SentenceTransformer
+import re
 
 st.markdown("""
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -44,17 +45,14 @@ st.app {{
     z-index: 1000;
 }
 
-
-/* ---------- Center All Headers ---------- */
 h1, h2, h3, h4, h5, h6 {
     text-align: center;
     margin-top: 1rem;
     margin-bottom: 1rem;
 }
 
-/* ---------- Input Styling (Accessible) ---------- */
 .st-key-styledinput input {
-    border: 2px solid #CBC3E3; /* Light lavender */
+    border: 2px solid #CBC3E3;
     border-radius: 5px;
     background-color: #FFFFFF;
     color: #000000;
@@ -66,7 +64,6 @@ h1, h2, h3, h4, h5, h6 {
     display: block;
 }
 
-/* Hover and focus states with accessible outline and contrast */
 .st-key-styledinput input:hover {
     border: 2px solid #f02035;
     box-shadow: 0 0 8px #f02092;
@@ -75,48 +72,20 @@ h1, h2, h3, h4, h5, h6 {
 .st-key-styledinput input:focus {
     border: 2px solid #FFD700;
     box-shadow: 0 0 10px #FFD700;
-    outline: 3px solid #FFD700; /* Ensure visible keyboard focus */
+    outline: 3px solid #FFD700;
 }
 
-/* ---------- Skip Link (Optional Accessibility Feature) ---------- */
-.skip-link {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: #000;
-    color: #fff;
-    padding: 8px 16px;
-    z-index: 1000;
-    text-decoration: none;
+.search-strategy {
+    background: rgba(0,0,100,0.7);
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    font-size: 0.9em;
 }
-.skip-link:focus {
-    top: 0;
-}
-
-/* ---------- Dark Mode Support ---------- */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #121212;
-        color: #FFFFFF;
-    }
-
-    .st-key-styledinput input {
-        background-color: #1E1E1E;
-        color: #FFFFFF;
-        border: 2px solid #888;
-    }
-
-    .st-key-styledinput input:focus {
-        border: 2px solid #FFD700;
-        box-shadow: 0 0 10px #FFD700;
-        outline: 3px solid #FFD700;
-    }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-# In-memory cache (reset each session)
+# In-memory cache
 answer_cache = {}
 
 # OpenRouter API Setup
@@ -124,7 +93,25 @@ openai.api_key = st.secrets["openrouter"]["chatbotkey"]
 openai.api_base = "https://openrouter.ai/api/v1"
 model_name = "microsoft/phi-3-mini-128k-instruct"
 
-# Load data
+# Smart query expansion for topics that may not have direct answers
+CONCEPT_MAPPINGS = {
+    # Age-related concepts -> biblical principles about life stages
+    "age": ["wisdom", "youth", "elder", "generation", "child", "father", "mother", "teach", "learn", "experience"],
+    "old": ["wisdom", "elder", "gray", "ancient", "counsel", "understanding", "mature"],
+    "young": ["youth", "child", "son", "daughter", "learn", "obey", "grow", "train"],
+    
+    # Race/ethnicity -> biblical concepts of unity and inclusion
+    "race": ["nation", "people", "tribe", "gentile", "jew", "foreigner", "stranger", "neighbor", "brother"],
+    "ethnicity": ["nation", "people", "kindred", "tongue", "tribe", "israel", "gentile"],
+    "color": ["nation", "people", "tribe", "all", "every", "whosoever"],
+    
+    # Life guidance -> core biblical themes
+    "life": ["live", "walk", "path", "way", "light", "truth", "peace", "joy", "love", "hope", "faith"],
+    "purpose": ["called", "chosen", "will", "plan", "work", "serve", "glorify", "kingdom"],
+    "meaning": ["truth", "wisdom", "understanding", "purpose", "eternal", "treasure", "heart"],
+    "guidance": ["lead", "guide", "path", "way", "counsel", "wisdom", "direction", "teach"]
+}
+
 @st.cache_resource
 def load_data():
     with open("chunks.pkl", "rb") as f:
@@ -132,75 +119,210 @@ def load_data():
     index = faiss.read_index("faiss.index")
     return chunks, index
 
-# Load embedding model
 @st.cache_resource
 def load_embedder():
     return SentenceTransformer("all-MiniLM-L6-v2")
+
+def detect_question_type(question):
+    """Identify if this is a topic that may not have direct biblical answers"""
+    q_lower = question.lower()
+    
+    # Questions likely to have indirect answers
+    indirect_indicators = [
+        ("age", ["how old", "what age", "age of", "years old"]),
+        ("race", ["what race", "what color", "ethnicity", "skin color"]),
+        ("specific_life", ["what job", "career", "where to live", "who to marry"])
+    ]
+    
+    for category, patterns in indirect_indicators:
+        if any(pattern in q_lower for pattern in patterns):
+            return category
+    
+    return "direct"
+
+def create_alternative_queries(question, question_type):
+    """Create alternative search queries for indirect topics"""
+    q_lower = question.lower()
+    alternatives = [question]  # Always include original
+    
+    if question_type == "age":
+        # Focus on principles about life stages instead of specific ages
+        if "old" in q_lower or "age" in q_lower:
+            alternatives.extend([
+                "wisdom of elders scripture",
+                "honoring father and mother",
+                "gray hair crown of glory",
+                "teaching children wisdom"
+            ])
+    
+    elif question_type == "race":
+        # Focus on unity and love for all people
+        alternatives.extend([
+            "all nations tribes tongues",
+            "love your neighbor as yourself", 
+            "no jew nor greek bond nor free",
+            "whosoever believes shall not perish",
+            "God shows no partiality"
+        ])
+    
+    elif question_type == "specific_life":
+        # Focus on general life principles
+        alternatives.extend([
+            "seek first the kingdom of God",
+            "trust in the Lord with all your heart",
+            "walk in wisdom",
+            "whatever you do do it heartily"
+        ])
+    
+    # Always add conceptual alternatives
+    for word in q_lower.split():
+        if word in CONCEPT_MAPPINGS:
+            concepts = CONCEPT_MAPPINGS[word][:3]  # Top 3 related concepts
+            alternatives.extend(concepts)
+    
+    return alternatives[:6]  # Limit to 6 queries max
+
+def smart_search(question, chunks, index, embed_model):
+    """Enhanced search that tries multiple strategies"""
+    question_type = detect_question_type(question)
+    search_queries = create_alternative_queries(question, question_type)
+    
+    all_chunk_indices = set()
+    
+    # Search with all alternative queries
+    for query in search_queries:
+        query_vec = embed_model.encode([query])
+        _, indices = index.search(query_vec, k=3)
+        all_chunk_indices.update(indices[0])
+    
+    # Get unique chunks
+    selected_chunks = [chunks[i] for i in list(all_chunk_indices)[:8]]
+    
+    return selected_chunks, question_type, len(search_queries)
+
+def create_smart_prompt(question, chunks, question_type):
+    """Create prompts that acknowledge when direct answers aren't available"""
+    
+    context = "\n\n".join([f"Passage {i+1}: {chunk}" for i, chunk in enumerate(chunks)])
+    
+    if question_type in ["age", "race", "specific_life"]:
+        instruction = f"""You are a helpful Bible teacher. The user asked a question that may not have a direct biblical answer. 
+
+Biblical Context:
+{context}
+
+Question: {question}
+
+Instructions:
+1. If the Bible doesn't directly answer this specific question, say so honestly
+2. Then explain what biblical principles DO apply to this topic
+3. Focus on what Scripture teaches about related themes (love, wisdom, unity, God's character)
+4. For age questions: discuss biblical principles about different life stages
+5. For race questions: emphasize biblical teachings on unity, love for all people, and God's inclusive love
+6. For life guidance: provide relevant biblical principles even if not addressing the exact situation
+7. Be encouraging and practical while staying biblically grounded
+
+Answer:"""
+    else:
+        instruction = f"""Answer the question using the biblical passages provided.
+
+Biblical Context:
+{context}
+
+Question: {question}
+
+Instructions:
+1. Answer based on what the passages say
+2. Include relevant verse references when possible
+3. If passages don't fully address the question, explain what information is available
+
+Answer:"""
+    
+    return instruction
 
 chunks, index = load_data()
 embed_model = load_embedder()
 
 # UI
-st.markdown("# Ask The Bible")  # H2 — Section title
-st.markdown("## Enter your question below")  # H3 — Instruction
-st.markdown("### This bible reading is from the American Standard Bible ")  # H3 — Instruction
+st.markdown("# Ask The Bible")
+st.markdown("## Enter your question below")
+st.markdown("### This bible reading is from the American Standard Bible")
 
 question = st.text_input(
     "Your question",
     key="styledinput",
-    help="Type a question about the uploaded PDF document. Press Enter to submit."
+    help="Ask any biblical question. The app will find relevant principles even for topics not directly addressed in Scripture."
 )
 
-# Hashing for cache key
+# Updated examples
+with st.expander("📝 Example Questions (Including Challenging Ones)"):
+    st.write("""
+    **Direct Biblical Questions:**
+    - What does Jesus say about love?
+    - How can I find peace in troubles?
+    
+    **Challenging Questions (Indirect Answers):**
+    - What does the Bible say about racism?
+    - How should different races treat each other?
+    - What age should someone get married?
+    - What does the Bible say about elderly people?
+    - How do I find my purpose in life?
+    """)
+
 def get_cache_key(question: str):
-    clean = question.strip().lower()  # Normalize: remove extra spaces, lowercase
+    clean = question.strip().lower()
     return hashlib.md5(clean.encode("utf-8")).hexdigest()
 
 if question:
     key = get_cache_key(question)
 
     if key in answer_cache:
-        result = answer_cache[key]
+        result, question_type, search_count = answer_cache[key]
         st.info("✅ Loaded from cache.")
     else:
-        # Embed & search
-        query_vec = embed_model.encode([question])
-        _, I = index.search(query_vec, k=2)
-        context = ". ".join([chunks[i] for i in I[0]])
-        context = context[:1000]
+        # Smart search
+        relevant_chunks, question_type, search_count = smart_search(question, chunks, index, embed_model)
         
-        # Prompt
-        prompt = f"""Answer the question using only the context below.
+        # Create appropriate prompt
+        prompt = create_smart_prompt(question, relevant_chunks, question_type)
         
-Context:
-{context}
-
-Question: {question}
-"""
-
         # Call OpenRouter
-        with st.spinner("Thinking..."):
+        with st.spinner("Searching biblical wisdom..."):
             try:
                 response = openai.ChatCompletion.create(
                     model=model_name,
                     messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "system", "content": "You are a wise Bible teacher who helps people understand Scripture and apply biblical principles to life questions."},
                         {"role": "user", "content": prompt},
                     ],
-                    max_tokens=200,
+                    max_tokens=500,  # More space for nuanced answers
                     temperature=0.2,
                 )
                 result = response.choices[0].message.content.strip()
-                answer_cache[key] = result
+                answer_cache[key] = (result, question_type, search_count)
             except Exception as e:
                 result = f"⚠️ Error: {str(e)}"
+                question_type = "error"
+                search_count = 0
 
-    # Show answer
+    # Display results
     st.markdown("""
     <div id="main-content" role="main" aria-label="Answer Section">
-      <h4>Answer:</h4>
+      <h4>Biblical Wisdom:</h4>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Show search strategy used
+    if question_type in ["age", "race", "specific_life"]:
+        strategy_text = {
+            "age": "🔍 Searched for biblical principles about life stages and wisdom",
+            "race": "🔍 Searched for biblical teachings on unity and love for all people", 
+            "specific_life": "🔍 Searched for general biblical life principles"
+        }
+        st.markdown(f'<div class="search-strategy">{strategy_text.get(question_type, "")}</div>', unsafe_allow_html=True)
+    
     st.write(result)
     
-
+    # Helpful follow-up suggestions
+    if question_type in ["age", "race", "specific_life"]:
+        st.info("💡 **Remember**: The Bible focuses more on principles and character than specific details. Try asking about related themes like 'wisdom', 'love', 'unity', or 'God's will' for deeper insights!")
