@@ -82,68 +82,6 @@ h1, h2, h3, h4, h5, h6 {
 </style>
 """, unsafe_allow_html=True)
 
-# Example questions with click-to-fill functionality
-with st.expander("📝 Click any question to try it!"):
-    
-    st.markdown("**Direct Biblical Questions:**")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("💝 What does Jesus say about love?", key="q1"):
-            st.session_state.styledinput = "What does Jesus say about love?"
-            st.rerun()
-        
-        if st.button("🕊️ How can I find peace in troubles?", key="q2"):
-            st.session_state.styledinput = "How can I find peace in troubles?"
-            st.rerun()
-            
-        if st.button("🙏 What does the Bible say about prayer?", key="q3"):
-            st.session_state.styledinput = "What does the Bible say about prayer?"
-            st.rerun()
-    
-    with col2:
-        if st.button("💪 How to have strength in difficult times?", key="q4"):
-            st.session_state.styledinput = "How to have strength in difficult times?"
-            st.rerun()
-            
-        if st.button("😊 What brings joy according to scripture?", key="q5"):
-            st.session_state.styledinput = "What brings joy according to scripture?"
-            st.rerun()
-            
-        if st.button("🌟 How do I trust God's plan?", key="q6"):
-            st.session_state.styledinput = "How do I trust God's plan?"
-            st.rerun()
-    
-    st.markdown("**Challenging Questions (Indirect Answers):**")
-    col3, col4 = st.columns(2)
-    
-    with col3:
-        if st.button("🤝 What does the Bible say about racism?", key="q7"):
-            st.session_state.styledinput = "What does the Bible say about racism?"
-            st.rerun()
-            
-        if st.button("👴 What does the Bible say about elderly people?", key="q8"):
-            st.session_state.styledinput = "What does the Bible say about elderly people?"
-            st.rerun()
-            
-        if st.button("🎯 How do I find my purpose in life?", key="q9"):
-            st.session_state.styledinput = "How do I find my purpose in life?"
-            st.rerun()
-    
-    with col4:
-        if st.button("💑 What age should someone get married?", key="q10"):
-            st.session_state.styledinput = "What age should someone get married?"
-            st.rerun()
-            
-        if st.button("🌍 How should different races treat each other?", key="q11"):
-            st.session_state.styledinput = "How should different races treat each other?"
-            st.rerun()
-            
-        if st.button("💼 What does the Bible say about work?", key="q12"):
-            st.session_state.styledinput = "What does the Bible say about work?"
-            st.rerun()
-
-
 # In-memory cache
 answer_cache = {}
 
@@ -304,8 +242,70 @@ embed_model = load_embedder()
 
 # UI
 st.markdown("# Ask The Bible")
-st.markdown("## Enter your question below")
 st.markdown("### This bible reading is from the American Standard Bible")
+st.markdown("## Enter your question below")
+
+# Example questions with click-to-fill functionality
+with st.expander("📝 Click any question to try it!"):
+    
+    st.markdown("**Direct Biblical Questions:**")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("💝 What does Jesus say about love?", key="q1"):
+            st.session_state.styledinput = "What does Jesus say about love?"
+            st.rerun()
+        
+        if st.button("🕊️ How can I find peace in troubles?", key="q2"):
+            st.session_state.styledinput = "How can I find peace in troubles?"
+            st.rerun()
+            
+        if st.button("🙏 What does the Bible say about prayer?", key="q3"):
+            st.session_state.styledinput = "What does the Bible say about prayer?"
+            st.rerun()
+    
+    with col2:
+        if st.button("💪 How to have strength in difficult times?", key="q4"):
+            st.session_state.styledinput = "How to have strength in difficult times?"
+            st.rerun()
+            
+        if st.button("😊 What brings joy according to scripture?", key="q5"):
+            st.session_state.styledinput = "What brings joy according to scripture?"
+            st.rerun()
+            
+        if st.button("🌟 How do I trust God's plan?", key="q6"):
+            st.session_state.styledinput = "How do I trust God's plan?"
+            st.rerun()
+    
+    st.markdown("**Challenging Questions (Indirect Answers):**")
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        if st.button("🤝 What does the Bible say about racism?", key="q7"):
+            st.session_state.styledinput = "What does the Bible say about racism?"
+            st.rerun()
+            
+        if st.button("👴 What does the Bible say about elderly people?", key="q8"):
+            st.session_state.styledinput = "What does the Bible say about elderly people?"
+            st.rerun()
+            
+        if st.button("🎯 How do I find my purpose in life?", key="q9"):
+            st.session_state.styledinput = "How do I find my purpose in life?"
+            st.rerun()
+    
+    with col4:
+        if st.button("💑 What age should someone get married?", key="q10"):
+            st.session_state.styledinput = "What age should someone get married?"
+            st.rerun()
+            
+        if st.button("🌍 How should different races treat each other?", key="q11"):
+            st.session_state.styledinput = "How should different races treat each other?"
+            st.rerun()
+            
+        if st.button("💼 What does the Bible say about work?", key="q12"):
+            st.session_state.styledinput = "What does the Bible say about work?"
+            st.rerun()
+
 
 question = st.text_input(
     "Your question",
